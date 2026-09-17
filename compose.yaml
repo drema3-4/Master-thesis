@@ -13,7 +13,7 @@ services:
       - "8000:8000"
 
     volumes:
-      - ./models/Qwen3-06.B:/model:ro
+      - ./models/Qwen3-0.6B:/model:ro
 
     command:
       - /model
