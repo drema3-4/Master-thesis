@@ -1,0 +1,26 @@
+services:
+  qwen:
+    image: vllm/vllm-openai:v0.29.0-cu129
+    container_name: qwen3-vllm
+
+    gpus: all
+    ipc: host
+
+    environment:
+      VLLM_USE_V2_MODEL_RUNNER: "0"
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./models/Qwen3-06.B:/model:ro
+
+    command:
+      - /model
+      - --served-model-name=qwen3-0.6b
+      - --max-model-len=4096
+      - --gpu-memory-utilization=0.80
+      - --generation-config=vllm
+      - --reasoning-parser=qwen3
+
+    restart: unless-stopped
