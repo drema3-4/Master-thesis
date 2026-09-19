@@ -1,21 +1,36 @@
 from pathlib import Path
-import yaml
 
-from master_thesis.data.ex1.gen_dataset import (
-    gen_dataset
+from master_thesis.experiments.ex1.config import (
+    resolve_experiment_config
 )
-from master_thesis.data.ex1.save_dataset import save_dataset
+from master_thesis.experiments.ex1.dataset import (
+    gen_dataset,
+    save_dataset
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-config_path = Path(f"{PROJECT_ROOT}/configs/ex1/dataset.yaml")
-with config_path.open("r", encoding="utf-8") as file:
-    config = yaml.safe_load(file)
+def make_dataset(
+    name_experiment: str
+) -> None:
+    experiment_config_path=(
+        PROJECT_ROOT
+        / "configs"
+        / "experiments"
+        / name_experiment
+    )
+    resolved_config = resolve_experiment_config(
+        project_root=PROJECT_ROOT,
+        experiment_config_path=experiment_config_path
+    )
 
-dataset = gen_dataset(**config)
 
-dataset_path = Path(f"{PROJECT_ROOT}/data/generated/ex1/dataset.jsonl")
-dataset_path.parent.mkdir(parents=True, exist_ok=True)
-save_dataset(dataset, dataset_path)
+    dataset = gen_dataset(resolved_config.dataset_config)
+
+    dataset_path = resolved_config.dataset_path
+    dataset_path.parent.mkdir(parents=True, exist_ok=True)
+    save_dataset(dataset, dataset_path)
+
+make_dataset(name_experiment="ex1_v1.yaml")

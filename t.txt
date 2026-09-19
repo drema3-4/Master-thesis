@@ -1,0 +1,66 @@
+master-thesis/
+├── README.md
+├── pyproject.toml
+├── compose.yaml
+│
+├── configs/
+│   ├── models/
+│   │   └── qwen3_0_6b.yaml
+│   ├── datasets/
+│   │   └── ex1.yaml
+│   └── experiments/
+│       └── ex1_v1.yaml
+│
+├── prompts/
+│   └── ex1/
+│       └── v1/
+│           ├── system.txt
+│           ├── neutral.txt
+│           └── wrong_prior.txt
+│
+├── src/master_thesis/
+│   ├── config.py
+│   ├── llm/
+│   │   ├── client.py
+│   │   └── models.py
+│   ├── artifacts/
+│   │   ├── jsonl.py
+│   │   └── run_manifest.py
+│   ├── experiments/
+│   │   └── ex1/
+│   │       ├── models.py
+│   │       ├── laws.py
+│   │       ├── dataset.py
+│   │       ├── fitting.py
+│   │       ├── evidence.py
+│   │       ├── prompting.py
+│   │       ├── parser.py
+│   │       └── runner.py
+│   └── analysis/
+│       ├── aggregate.py
+│       └── figures.py
+│
+├── scripts/
+│   ├── download_model.py
+│   ├── make_dataset.py
+│   ├── smoke_test.py
+│   ├── run_experiment.py
+│   └── make_figures.py
+│
+├── data/
+│   └── generated/ex1/
+├── runs/
+│   └── <run_id>/
+│       ├── manifest.json
+│       ├── resolved_config.yaml
+│       ├── responses.jsonl
+│       ├── failures.jsonl
+│       └── metrics.json
+├── results/
+│   └── ex1/
+│       ├── tables/
+│       └── figures/
+├── docs/
+└── tests/
+    ├── unit/
+    └── integration/

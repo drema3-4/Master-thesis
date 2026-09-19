@@ -1,6 +1,6 @@
 import numpy as np
 
-from master_thesis.schemas.ex1.fit_schemas import (
+from master_thesis.experiments.ex1.models import (
     FitH0OutputSchema,
     FitH1OutputSchema
 )

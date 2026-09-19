@@ -1,0 +1,12 @@
+experiment_id: "ex1_v1"
+
+dataset_config_path: "configs/datasets/ex1.yaml"
+dataset_path: "data/generated/ex1/dataset.jsonl"
+
+model_config_path: "configs/models/qwen3_0_6b.yaml"
+client_config_path: "configs/models/client_config.yaml"
+generation_config_path: "configs/models/generation_config.yaml"
+
+prompt_version: "v1"
+
+llm_trials_per_condition: 1
