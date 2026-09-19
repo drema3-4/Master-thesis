@@ -1,10 +1,9 @@
-from master_thesis.experiments.ex1.models import (
-    TrialSchema
+from master_thesis.llm.schemas import (
+    Trial
 )
 
 
-
-def build_messages(trial: TrialSchema) -> list[dict[str, str]]:
+def build_trial(trial: Trial) -> list[dict[str, str]]:
     return [
         {"role": "system", "content": trial.system_prompt},
         {

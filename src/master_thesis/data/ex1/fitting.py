@@ -1,22 +1,21 @@
 import numpy as np
 
-from master_thesis.experiments.ex1.models import (
-    FitH0OutputSchema,
-    FitH1OutputSchema
+from master_thesis.schemas.ex1.schemas import (
+    FitH0Output,
+    FitH1Output
 )
 
 
 def fit_h0(
     xs: list[float],
     observations: list[float]
-) -> FitH0OutputSchema:
-    return FitH0OutputSchema(k=1.0)
-
+) -> FitH0Output:
+    return FitH0Output(k=1.0)
 
 def fit_h1(
     xs: list[float],
     observations: list[float]
-) -> FitH1OutputSchema:
+) -> FitH1Output:
     xs = np.array(xs)
     observations = np.array(observations)
 
@@ -31,4 +30,4 @@ def fit_h1(
 
     alpha = params[0]
 
-    return FitH1OutputSchema(k=1.0, alpha=float(alpha))
+    return FitH1Output(k=1.0, alpha=float(alpha))

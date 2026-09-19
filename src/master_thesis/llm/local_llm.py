@@ -1,14 +1,14 @@
 from openai import OpenAI
 
-from master_thesis.llm.models import (
-    LLMClientConfigSchema,
-    GenerationConfigSchema
+from master_thesis.llm.schemas import (
+    ClientConfig,
+    GenerationConfig
 )
 
 
-class LocalLLM:
+class LocalLLMClient:
     def __init__(
-        self, config: LLMClientConfigSchema
+        self, config: ClientConfig
     ) -> None:
         self.client = OpenAI(
             base_url=config.base_url,
@@ -19,7 +19,7 @@ class LocalLLM:
     def chat(
         self,
         messages: list[dict[str, str]],
-        config: GenerationConfigSchema
+        config: GenerationConfig
     ) -> dict:
         response = self.client.chat.completions.create(
             model=self.model,

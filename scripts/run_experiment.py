@@ -1,78 +1,61 @@
 from pathlib import Path
+import argparse
 
-from master_thesis.experiments.ex1.config import (
-    resolve_experiment_config
+from master_thesis.schemas.ex1.schemas import (
+    Ex1Config
 )
-from master_thesis.llm.client import LocalLLM
-from master_thesis.experiments.ex1.dataset import (
-    load_dataset
+from master_thesis.utils.load_yaml_config import (
+    load_yaml_config
 )
-from master_thesis.experiments.ex1.prompting import (
-    build_messages
+from master_thesis.utils.download_model import (
+    download_model
 )
-from master_thesis.experiments.ex1.models import (
-    TrialSchema
+from master_thesis.pipelines.ex1.make_dataset import (
+    make_dataset
 )
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from master_thesis.pipelines.ex1.experiment import (
+    experiment
+)
 
 
 def run_experiment(
-    name_experiment: str
+    experiment_config_path: str
 ) -> None:
-    experiment_config_path=(
-        PROJECT_ROOT
-        / "configs"
-        / "experiments"
-        / {name_experiment}
+    experiment_config_path = Path(experiment_config_path)
+    
+    experiment_config = load_yaml_config(
+        path=experiment_config_path,
+        schema_type=Ex1Config
     )
-    resolved_config = resolve_experiment_config(
-        project_root=PROJECT_ROOT,
-        experiment_config_path=experiment_config_path
+    
+    if not experiment_config.llm_config.local_dir.exists():
+        print("="*40)
+        print("You are haven't model weights.")
+        print("Donwload weights.")
+        download_model(
+            experiment_config=experiment_config
+        )
+        print("Weights downloaded")
+        print("Start Docker, start container by compose.yaml and restart script")
+        print("="*40)
+        return
+    
+    if not experiment_config.dataset_path.exists():
+        make_dataset(
+            experiment_config=experiment_config
+        )
+    
+    experiment(
+        experiment_config=experiment_config
     )
 
 
-    llm = LocalLLM(
-        resolved_config.client_config
-    )
+parser = argparse.ArgumentParser()
 
-    dataset = load_dataset(resolved_config.dataset_path)
+parser.add_argument("experiment_config_path")
 
-    system_prompt = resolved_config.system_prompt
-    prior_prompts = resolved_config.prior_prompts
+args = parser.parse_args()
 
-    for type_prompt, prior_prompt in prior_prompts.items():
-        for sample in dataset:
-            xs = sample.xs
-            observations = sample.observations
-            H0 = "f(x) = kx"
-            H1 = r"f(x) = kx + \alpha x^{3}"
-            bic_h0 = sample.bic_h0
-            sse_h0 = sample.sse_h0
-            bic_h1 = sample.bic_h1
-            sse_h1 = sample.sse_h1
-            delta_bic = bic_h0 - bic_h1
-
-            messages = build_messages(
-                TrialSchema(
-                    system_prompt=system_prompt,
-                    prior_prompt=prior_prompt,
-                    xs=xs,
-                    observations=observations,
-                    H0=H0,
-                    H1=H1,
-                    bic_h0=bic_h0,
-                    sse_h0=sse_h0,
-                    bic_h1=bic_h1,
-                    sse_h1=sse_h1,
-                    delta_bic=delta_bic
-                )
-            )
-
-            response = llm.chat(
-                messages=messages,
-                config=resolved_config.generation_config
-            )
-
-            print(type_prompt, response["content"])
+run_experiment(
+    experiment_config_path=args.experiment_config_path
+)
