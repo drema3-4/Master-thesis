@@ -16,7 +16,6 @@ class ObservationsGeneratorParams(BaseModel):
     alpha: float
     mu: float
     sigma: float
-    seed: int
 
 class ObservationsGeneratorOutput(BaseModel):
     xs: list[float]
@@ -33,11 +32,28 @@ class FitH1Output(BaseModel):
 class DatasetGeneratorParams(BaseModel):
     seed: int
     n_observations: int
-    X: float
+    Xs: list[float]
     k: float
     relative_unlinear_intensity: list[float]
     mu: float
     relative_noise_intensity: list[float]
+
+class Trial(BaseModel):
+    xs: list[float]
+    ground_truth: list[float]
+    observations: list[float]
+    h0_fit_params: FitH0Output
+    h0_predicted: list[float]
+    h1_fit_params: FitH1Output
+    h1_predicted: list[float]
+    sse_h0: float
+    sse_h1: float
+    bic_h0: float
+    bic_h1: float
+    delta_bic: float
+    log_likelihood_h0: float
+    log_likelihood_h1: float
+    log_likelihood_ratio: float
 
 class DatasetItem(BaseModel):
     xs: list[float]
@@ -45,12 +61,17 @@ class DatasetItem(BaseModel):
     observations: list[float]
     h0_fit_params: FitH0Output
     h0_predicted: list[float]
-    sse_h0: float
-    bic_h0: float
     h1_fit_params: FitH1Output
     h1_predicted: list[float]
+    sse_h0: float
     sse_h1: float
+    bic_h0: float
     bic_h1: float
+    delta_bic: float
+    log_likelihood_h0: float
+    log_likelihood_h1: float
+    log_likelihood_ratio: float
+    monte_carlo: float
     s: float
     r: float
     k: float
