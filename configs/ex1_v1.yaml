@@ -52,4 +52,4 @@ system_prompt_path: "prompts/ex1/system.txt"
 neutral_prior_prompt_path: "prompts/ex1/neutral.txt"
 wrong_prior_prompt_path: "prompts/ex1/wrong.txt"
 
-save_run_experiment_path: "outputs/runs/ex1/run_experiment_result.jsonl"
+save_run_experiment_path: "outputs/runs/ex1"

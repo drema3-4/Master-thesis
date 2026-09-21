@@ -1,3 +1,6 @@
+from pathlib import Path
+import json
+
 from master_thesis.schemas.ex1.schemas import (
     Ex1Config,
     ExperimentRunItemResult
@@ -15,11 +18,25 @@ from master_thesis.llm.schemas import Trial
 from master_thesis.utils.parse_hypothesis import (
     parse_hypothesis
 )
+from master_thesis.utils.create_run_id import (
+    create_run_id
+)
 
 
 def experiment(
     experiment_config: Ex1Config
 ) -> None:
+    run_id = create_run_id("ex1")
+
+    run_dir = Path(
+        experiment_config.save_run_experiment_path
+        / run_id
+    )
+    run_dir.mkdir(parents=True, exist_ok=False)
+
+    responses_path = run_dir / "responses.jsonl"
+    failures_path = run_dir / "failures.jsonl"
+    
     client = LocalLLMClient(experiment_config.client_config)
 
     H0 = experiment_config.H0
@@ -47,61 +64,80 @@ def experiment(
 
     dataset = load_dataset(experiment_config.dataset_path)
 
-    run_id = 1
-    experiment_run_result = []
-    for type_prior, prior_prompt in prior_prompts.items():
-        for item in dataset:
-            response = client.chat(
-                messages=build_trial(
-                    Trial(
-                        system_prompt=system_prompt,
-                        prior_prompt=prior_prompt,
-                        xs=item.xs,
-                        observations=item.observations,
+    trial_index = 1
+    with (
+        responses_path.open("a", encoding="utf-8") as responses_file,
+        failures_path.open("a", encoding="utf-8") as failures_file,
+    ):
+        for type_prior, prior_prompt in prior_prompts.items():
+            for item in dataset:
+                try:
+                    response = client.chat(
+                        messages=build_trial(
+                            Trial(
+                                system_prompt=system_prompt,
+                                prior_prompt=prior_prompt,
+                                xs=item.xs,
+                                observations=item.observations,
+                                H0=H0,
+                                H1=H1,
+                                sse_h0=item.sse_h0,
+                                sse_h1=item.sse_h1,
+                                bic_h0=item.bic_h0,
+                                bic_h1=item.bic_h1,
+                                delta_bic=item.delta_bic,
+                                log_likelihood_h0=item.log_likelihood_h0,
+                                log_likelihood_h1=item.log_likelihood_h1,
+                                log_likelihood_ratio=item.log_likelihood_ratio,
+                                monte_carlo=item.monte_carlo
+                            )
+                        ),
+                        config=experiment_config.generation_config
+                    )
+
+                    is_right_answer = (
+                        True 
+                        if "H1" in parse_hypothesis(response["content"])
+                        else False
+                    )
+
+                    result = ExperimentRunItemResult(
+                        run_id=run_id,
+                        trial_index=trial_index,
                         H0=H0,
                         H1=H1,
-                        bic_h0=item.bic_h0,
+                        right_hypothesis=H1,
+                        s=item.s,
+                        r=item.r,
+                        k=item.k,
+                        X=item.X,
                         sse_h0=item.sse_h0,
-                        bic_h1=item.bic_h1,
                         sse_h1=item.sse_h1,
-                        delta_bic=item.bic_h0-item.bic_h1
+                        bic_h0=item.bic_h0,
+                        bic_h1=item.bic_h1,
+                        delta_bic=item.bic_h0-item.bic_h1,
+                        prior=type_prior,
+                        llm_output=response["content"],
+                        is_right=is_right_answer
                     )
-                ),
-                config=experiment_config.generation_config
-            )
 
-            is_right_answer = (
-                True 
-                if H1 in parse_hypothesis(response["content"])
-                else False
-            )
+                    responses_file.write(result.model_dump_json())
+                    responses_file.write("\n")
+                    responses_file.flush()
 
-            experiment_run_result.append(
-                ExperimentRunItemResult(
-                    run_id=run_id,
-                    H0=H0,
-                    H1=H1,
-                    right_hypothesis=H1,
-                    s=item.s,
-                    r=item.r,
-                    k=item.k,
-                    X=item.X,
-                    sse_h0=item.sse_h0,
-                    sse_h1=item.sse_h1,
-                    bic_h0=item.bic_h0,
-                    bic_h1=item.bic_h1,
-                    delta_bic=item.bic_h0-item.bic_h1,
-                    prior=type_prior,
-                    llm_output=response["content"],
-                    is_right=is_right_answer
-                )
-            )
+                except Exception as error:
+                    failure = {
+                        "run_id": run_id,
+                        "trial_index": trial_index,
+                        "error_type": type(error).__name__,
+                        "error_message": str(error),
+                    }
 
-            run_id += 1
+                    failures_file.write(
+                        json.dumps(failure, ensure_ascii=False)
+                    )
+                    failures_file.write("\n")
+                    failures_file.flush()
+            
 
-    result_path = experiment_config.save_run_experiment_path
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    with result_path.open("w", encoding="utf-8") as file:
-        for item in experiment_run_result:
-            file.write(item.model_dump_json())
-            file.write("\n")
+                trial_index += 1

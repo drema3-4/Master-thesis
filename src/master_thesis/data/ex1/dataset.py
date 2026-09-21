@@ -6,7 +6,7 @@ from master_thesis.schemas.ex1.schemas import(
     ObservationsGeneratorParams,
     ObservationsGeneratorOutput,
     DatasetGeneratorParams,
-    Trial,
+    PreItem,
     DatasetItem
 )
 from master_thesis.data.ex1.laws import h0, h1
@@ -48,10 +48,10 @@ def gen_observations(
         observations=observations
     )
 
-def trial(
+def pre_item(
     schema: ObservationsGeneratorParams,
     rng: random.Random
-) -> Trial:
+) -> PreItem:
     out = gen_observations(schema=schema, rng=rng)
     xs = out.xs
     ground_truth = out.ground_truth
@@ -87,7 +87,7 @@ def trial(
     )
     log_likelihood_ratio = log_likelihood_h1 - log_likelihood_h0
 
-    return Trial(
+    return PreItem(
         xs=xs,
         ground_truth=ground_truth,
         observations=observations,
@@ -127,7 +127,7 @@ def gen_dataset(
 
                 delta_bics = []
                 for _ in range(1000):
-                    trial_ = trial(
+                    pre_item_ = pre_item(
                         schema=ObservationsGeneratorParams(
                             n_observations=n_observations,
                             x_max=x_max,
@@ -140,10 +140,10 @@ def gen_dataset(
                         rng=rng
                     )
 
-                    delta_bics.append(trial_.delta_bic)
+                    delta_bics.append(pre_item_.delta_bic)
                 monte_carlo_ = monte_carlo(delta_bics=delta_bics)
 
-                trial_ = trial(
+                pre_item_ = pre_item(
                     schema=ObservationsGeneratorParams(
                         n_observations=n_observations,
                         x_max=x_max,
@@ -157,7 +157,7 @@ def gen_dataset(
                 )
 
                 dataset.append(DatasetItem(
-                    **trial_.model_dump(),
+                    **pre_item_.model_dump(),
                     monte_carlo=monte_carlo_,      
                     s=s,
                     r=r,

@@ -30,8 +30,12 @@ class Trial(BaseModel):
     observations: list[float]
     H0: str
     H1: str
-    bic_h0: float
     sse_h0: float
-    bic_h1: float
     sse_h1: float
+    bic_h0: float
+    bic_h1: float
     delta_bic: float
+    log_likelihood_h0: float
+    log_likelihood_h1: float
+    log_likelihood_ratio: float
+    monte_carlo: float

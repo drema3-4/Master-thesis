@@ -18,7 +18,7 @@ services:
     command:
       - /model
       - --served-model-name=qwen3-0.6b
-      - --max-model-len=4096
+      - --max-model-len=8192
       - --gpu-memory-utilization=0.80
       - --generation-config=vllm
       - --reasoning-parser=qwen3

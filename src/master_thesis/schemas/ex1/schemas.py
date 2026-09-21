@@ -38,7 +38,7 @@ class DatasetGeneratorParams(BaseModel):
     mu: float
     relative_noise_intensity: list[float]
 
-class Trial(BaseModel):
+class PreItem(BaseModel):
     xs: list[float]
     ground_truth: list[float]
     observations: list[float]
@@ -78,7 +78,8 @@ class DatasetItem(BaseModel):
     X: float
 
 class ExperimentRunItemResult(BaseModel):
-    run_id: int
+    run_id: str
+    trial_index: int
     H0: str
     H1: str
     right_hypothesis: str
