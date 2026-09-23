@@ -92,6 +92,10 @@ class ExperimentRunItemResult(BaseModel):
     bic_h0: float
     bic_h1: float
     delta_bic: float
+    log_likelihood_h0: float
+    log_likelihood_h1: float
+    log_likelihood_ratio: float
+    monte_carlo: float
     prior: str
     llm_output: str
     answer: str
