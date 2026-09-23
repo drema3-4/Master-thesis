@@ -18,22 +18,13 @@ from master_thesis.llm.schemas import Trial
 from master_thesis.utils.parse_hypothesis import (
     parse_hypothesis
 )
-from master_thesis.utils.create_run_id import (
-    create_run_id
-)
 
 
 def experiment(
-    experiment_config: Ex1Config
-) -> None:
-    run_id = create_run_id("ex1")
-
-    run_dir = Path(
-        experiment_config.save_run_experiment_path
-        / run_id
-    )
-    run_dir.mkdir(parents=True, exist_ok=False)
-
+    experiment_config: Ex1Config,
+    run_id: str,
+    run_dir: Path
+) -> tuple[int, int]:
     responses_path = run_dir / "responses.jsonl"
     failures_path = run_dir / "failures.jsonl"
     
@@ -47,24 +38,18 @@ def experiment(
         .system_prompt_path
         .read_text(encoding="utf-8")
     )
-    neutral_prompt = (
-        experiment_config
-        .neutral_prior_prompt_path
-        .read_text(encoding="utf-8")
-    )
-    wrong_prompt = (
-        experiment_config
-        .wrong_prior_prompt_path
-        .read_text(encoding="utf-8")
-    )
-    prior_prompts = {
-        "neutral": neutral_prompt,
-        "wrong": wrong_prompt
-    }
+    prior_prompts = {}
+    for type, prior_prompt_path in experiment_config.prior_prompts_paths.items():
+        prior_prompts[type] = (
+            prior_prompt_path
+            .read_text(encoding="utf-8")
+        )
 
     dataset = load_dataset(experiment_config.dataset_path)
 
     trial_index = 1
+    successful_trials = 0
+    failed_trials = 0
     with (
         responses_path.open("a", encoding="utf-8") as responses_file,
         failures_path.open("a", encoding="utf-8") as failures_file,
@@ -95,11 +80,8 @@ def experiment(
                         config=experiment_config.generation_config
                     )
 
-                    is_right_answer = (
-                        True 
-                        if "H1" in parse_hypothesis(response["content"])
-                        else False
-                    )
+                    answer = parse_hypothesis(response["content"])
+                    is_right_answer = True if "H1" in answer else False
 
                     result = ExperimentRunItemResult(
                         run_id=run_id,
@@ -118,12 +100,15 @@ def experiment(
                         delta_bic=item.bic_h0-item.bic_h1,
                         prior=type_prior,
                         llm_output=response["content"],
+                        answer=answer,
                         is_right=is_right_answer
                     )
 
                     responses_file.write(result.model_dump_json())
                     responses_file.write("\n")
                     responses_file.flush()
+
+                    successful_trials += 1
 
                 except Exception as error:
                     failure = {
@@ -138,6 +123,9 @@ def experiment(
                     )
                     failures_file.write("\n")
                     failures_file.flush()
-            
+
+                    failed_trials += 1
 
                 trial_index += 1
+
+    return (successful_trials, failed_trials)

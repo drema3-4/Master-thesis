@@ -94,9 +94,12 @@ class ExperimentRunItemResult(BaseModel):
     delta_bic: float
     prior: str
     llm_output: str
+    answer: str
     is_right: bool
 
 class Ex1Config(BaseModel):
+    experiment_id: str
+    schema_version: str
     H0: str
     H1: str
     dataset_generation: DatasetGeneratorParams
@@ -105,6 +108,5 @@ class Ex1Config(BaseModel):
     client_config: ClientConfig
     generation_config: GenerationConfig
     system_prompt_path: Path
-    neutral_prior_prompt_path: Path
-    wrong_prior_prompt_path: Path
+    prior_prompts_paths: dict[str, Path]
     save_run_experiment_path: Path

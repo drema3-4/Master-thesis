@@ -1,3 +1,7 @@
+experiment_id: "ex1"
+
+schema_version: "v1"
+
 H0: "f(x) = k*x"
 H1: "f(x) = k*x + alpha*x^{3}"
 
@@ -49,7 +53,8 @@ generation_config:
   enable_thinking: False
 
 system_prompt_path: "prompts/ex1/system.txt"
-neutral_prior_prompt_path: "prompts/ex1/neutral.txt"
-wrong_prior_prompt_path: "prompts/ex1/wrong.txt"
+prior_prompts_paths:
+  neutral: "prompts/ex1/neutral.txt"
+  wrong: "prompts/ex1/wrong.txt"
 
 save_run_experiment_path: "outputs/runs/ex1"
