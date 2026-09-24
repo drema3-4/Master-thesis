@@ -17,7 +17,7 @@ def build_trial(trial: Trial) -> list[dict[str, str]]:
                 f"H0: SSE = {trial.sse_h0}, BIC = {trial.bic_h0}, log_likelihood = {trial.log_likelihood_h0}\n"
                 f"H1: SSE = {trial.sse_h1}, BIC = {trial.bic_h1}, log_likelihood = {trial.log_likelihood_h1}\n"
                 f"Delta BIC = {trial.delta_bic}"
-                f"log_likelihood_ratio = {trial.log_likelihood_ratio}"
+                f"likelihood_ratio = {trial.likelihood_ratio}"
             )
         }
     ]

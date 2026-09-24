@@ -29,6 +29,8 @@ def make_manifest(
             ).strip()
         ),
         "model": experiment_config.llm_config.model_dump(mode="json"),
+        "calibration_dataset_path": str(experiment_config.calibration_dataset_path),
+        "choose_dataset_params_path": str(experiment_config.choose_dataset_params_path),
         "dataset_path": str(experiment_config.dataset_path),
         "planned_trials": successful_trials + failed_trials,
         "successful_trials": successful_trials,

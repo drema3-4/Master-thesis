@@ -10,7 +10,7 @@ SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 def load_yaml_config(
     path: Path,
-    schema_type: type[SchemaT],
+    schema_type: type[SchemaT]
 ) -> SchemaT:
     with path.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file)

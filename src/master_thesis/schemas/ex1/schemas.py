@@ -29,14 +29,35 @@ class FitH1Output(BaseModel):
     k: float
     alpha: float
 
-class DatasetGeneratorParams(BaseModel):
+class DatasetCalibrationParams(BaseModel):
     seed: int
-    n_observations: int
     Xs: list[float]
+    n_observations: int
     k: float
-    relative_unlinear_intensity: list[float]
     mu: float
+    relative_unlinear_intensity: list[float]
     relative_noise_intensity: list[float]
+    
+class DatasetCalibrationItem(BaseModel):
+    seed: int
+    X: float
+    n_observations: int
+    k: float
+    mu: float
+    r: float
+    s: float
+    monte_carlo: float
+
+class ChooseDatasetParamsItem(BaseModel):
+    target_evidence_strength: float
+    seed: int
+    X: float
+    n_observations: int
+    k: float
+    mu: float
+    r: float
+    s: float
+    calibrated_evidence_strength: float
 
 class PreItem(BaseModel):
     xs: list[float]
@@ -53,9 +74,10 @@ class PreItem(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    log_likelihood_ratio: float
+    likelihood_ratio: float
 
 class DatasetItem(BaseModel):
+    target_evidence_strength: float
     xs: list[float]
     ground_truth: list[float]
     observations: list[float]
@@ -70,8 +92,8 @@ class DatasetItem(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    log_likelihood_ratio: float
-    monte_carlo: float
+    likelihood_ratio: float
+    calibrated_evidence_strength: float
     s: float
     r: float
     k: float
@@ -94,8 +116,9 @@ class ExperimentRunItemResult(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    log_likelihood_ratio: float
-    monte_carlo: float
+    likelihood_ratio: float
+    target_evidence_strength: float
+    calibrated_evidence_strength: float
     prior: str
     llm_output: str
     answer: str
@@ -106,7 +129,10 @@ class Ex1Config(BaseModel):
     schema_version: str
     H0: str
     H1: str
-    dataset_generation: DatasetGeneratorParams
+    dataset_calibration_params: DatasetCalibrationParams
+    calibration_dataset_path: Path
+    target_evidence_strength: list[float]
+    choose_dataset_params_path: Path
     dataset_path: Path
     llm_config: ModelConfig
     client_config: ClientConfig

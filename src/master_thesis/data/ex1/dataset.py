@@ -1,11 +1,15 @@
 import random
 import numpy as np
 from pathlib import Path
+from typing import TypeVar
+from pydantic import BaseModel
 
 from master_thesis.schemas.ex1.schemas import(
     ObservationsGeneratorParams,
     ObservationsGeneratorOutput,
-    DatasetGeneratorParams,
+    DatasetCalibrationParams,
+    DatasetCalibrationItem,
+    ChooseDatasetParamsItem,
     PreItem,
     DatasetItem
 )
@@ -19,6 +23,9 @@ from master_thesis.metrics.evidence import (
     log_likelihood,
     monte_carlo
 )
+
+
+SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
 def gen_observations(
@@ -85,7 +92,7 @@ def pre_item(
         predicteds=h1_predicted,
         sigma=schema.sigma
     )
-    log_likelihood_ratio = log_likelihood_h1 - log_likelihood_h0
+    likelihood_ratio = log_likelihood_h1 - log_likelihood_h0
 
     return PreItem(
         xs=xs,
@@ -102,21 +109,21 @@ def pre_item(
         delta_bic=delta_bic,
         log_likelihood_h0=log_likelihood_h0,
         log_likelihood_h1=log_likelihood_h1,
-        log_likelihood_ratio=log_likelihood_ratio
+        likelihood_ratio=likelihood_ratio
     )
 
-def gen_dataset(
-    schema: DatasetGeneratorParams
-) -> list[DatasetItem]:
+def calibration_dataset_parameters_by_monte_carlo(
+    schema: DatasetCalibrationParams
+) -> list[DatasetCalibrationItem]:
     rng = random.Random(schema.seed)
-    
-    relative_noise_intensity = schema.relative_noise_intensity
-    k = schema.k
-    relative_unlinear_intensity = schema.relative_unlinear_intensity
-    n_observations = schema.n_observations
-    mu = schema.mu
 
-    dataset = []
+    n_observations = schema.n_observations
+    k = schema.k
+    mu = schema.mu
+    relative_unlinear_intensity = schema.relative_unlinear_intensity
+    relative_noise_intensity = schema.relative_noise_intensity
+
+    calibration_dataset = []
     for X in schema.Xs:
         x_max = X
         x_min = -X
@@ -143,31 +150,109 @@ def gen_dataset(
                     delta_bics.append(pre_item_.delta_bic)
                 monte_carlo_ = monte_carlo(delta_bics=delta_bics)
 
-                pre_item_ = pre_item(
-                    schema=ObservationsGeneratorParams(
+                calibration_dataset.append(
+                    DatasetCalibrationItem(
+                        seed=schema.seed,
+                        X=X,
                         n_observations=n_observations,
-                        x_max=x_max,
-                        x_min=x_min,
                         k=k,
-                        alpha=alpha,
                         mu=mu,
-                        sigma=sigma
-                    ),
-                    rng=rng
+                        r=r,
+                        s=s,
+                        monte_carlo=monte_carlo_
+                    )
                 )
 
-                dataset.append(DatasetItem(
+    return calibration_dataset
+
+def choose_dataset_params(
+    calibration_dataset_path: Path,
+    target_evidence_strength: list[float]
+) -> list[ChooseDatasetParamsItem]:
+    calibration_dataset = load_dataset(
+        path=calibration_dataset_path,
+        schema_type=DatasetCalibrationItem
+    )
+
+    choose_dataset_params = []
+    for level in target_evidence_strength:
+        min_diff = abs(level - calibration_dataset[0].monte_carlo)
+        index = 0
+        
+        for i, item in enumerate(calibration_dataset):
+            diff = abs(level - item.monte_carlo)
+
+            if diff < min_diff:
+                min_diff = diff
+                index = i
+
+        item = calibration_dataset[index]
+
+        choose_dataset_params.append(
+            ChooseDatasetParamsItem(
+                target_evidence_strength=level,
+                seed=item.seed,
+                X=item.X,
+                n_observations=item.n_observations,
+                k=item.k,
+                mu=item.mu,
+                r=item.r,
+                s=item.s,
+                calibrated_evidence_strength=item.monte_carlo
+            )
+        )
+
+    return choose_dataset_params
+
+def gen_dataset(
+    choose_dataset_params_path: Path
+) ->  list[DatasetItem]:
+    choose_dataset_params = load_dataset(
+        path=choose_dataset_params_path,
+        schema_type=ChooseDatasetParamsItem
+    )
+
+    dataset = []
+    for item in choose_dataset_params:
+        x_max = item.X
+        x_min = -item.X
+        alpha = abs((item.r * item.k * item.X) / (item.X**3))
+        sigma = item.s * item.k * item.X
+
+        for _ in range(100):
+            rng = random.Random(item.seed)
+
+            pre_item_ = pre_item(
+                schema=ObservationsGeneratorParams(
+                    n_observations=item.n_observations,
+                    x_max=x_max,
+                    x_min=x_min,
+                    k=item.k,
+                    alpha=alpha,
+                    mu=item.mu,
+                    sigma=sigma
+                ),
+                rng=rng
+            )
+
+            dataset.append(
+                DatasetItem(
+                    target_evidence_strength=item.target_evidence_strength,
                     **pre_item_.model_dump(),
-                    monte_carlo=monte_carlo_,      
-                    s=s,
-                    r=r,
-                    k=k,
-                    X=X
-                ))
+                    calibrated_evidence_strength=item.calibrated_evidence_strength,      
+                    s=item.s,
+                    r=item.r,
+                    k=item.k,
+                    X=item.X
+                )
+            )
 
     return dataset
 
-def load_dataset(path: Path) -> list[DatasetItem]:
+def load_dataset(
+    path: Path,
+    schema_type: type[SchemaT]
+) -> list[DatasetItem] | list[DatasetCalibrationItem] | list[ChooseDatasetParamsItem]:
     dataset = []
 
     with path.open("r", encoding="utf-8") as file:
@@ -175,13 +260,13 @@ def load_dataset(path: Path) -> list[DatasetItem]:
             if not line.strip():
                 continue
 
-            item = DatasetItem.model_validate_json(line)
+            item = schema_type.model_validate_json(line)
             dataset.append(item)
 
     return dataset
 
 def save_dataset(
-    datataset: list[DatasetItem],
+    datataset: list[DatasetItem] | list[DatasetCalibrationItem] | list[ChooseDatasetParamsItem],
     path: Path
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)

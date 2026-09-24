@@ -1,0 +1,104 @@
+experiment_id: ex1
+schema_version: v1
+H0: f(x) = k*x
+H1: f(x) = k*x + alpha*x^{3}
+dataset_calibration_params:
+  seed: 42
+  Xs:
+  - 1.0
+  - 2.0
+  - 4.0
+  - 6.0
+  - 8.0
+  - 10.0
+  n_observations: 50
+  k: 1.0
+  mu: 0.0
+  relative_unlinear_intensity:
+  - 0.05
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1.0
+  relative_noise_intensity:
+  - 0.01
+  - 0.05
+  - 0.1
+  - 0.15
+  - 0.2
+  - 0.25
+  - 0.3
+  - 0.35
+  - 0.4
+calibration_dataset_path: data\generated\ex1\calibration_dataset.jsonl
+target_evidence_strength:
+- 0.5
+- 0.55
+- 0.6
+- 0.65
+- 0.7
+- 0.75
+- 0.8
+- 0.85
+- 0.9
+- 0.95
+- 0.99
+- 1.0
+choose_dataset_params_path: data\generated\ex1\choose_dataset_params.jsonl
+dataset_path: data\generated\ex1\dataset.jsonl
+llm_config:
+  repo_id: Qwen/Qwen3-0.6B
+  revision: c1899de289a04d12100db370d81485cdf75e47ca
+  local_dir: models\Qwen3-0.6B
+  served_name: qwen3-0.6b
+  runtime_image: vllm/vllm-openai:v0.29.0-cu129
+client_config:
+  base_url: http://localhost:8000/v1
+  api_key: local
+  model: qwen3-0.6b
+generation_config:
+  temperature: 0.7
+  top_p: 0.8
+  top_k: 20
+  max_tokens: 512
+  seed: 42
+  enable_thinking: false
+system_prompt_path: prompts\ex1\system.txt
+prior_prompts_paths:
+  neutral: prompts\ex1\neutral.txt
+  wrong: prompts\ex1\wrong.txt
+save_run_experiment_path: outputs\runs\ex1
+system_prompt: "Словарь терминов и обозначений:\n    1. Prior - предлагаемая тебе\
+  \ вероятно вреная гипотеза. Другими словами предположение;\n    2. xs - независимые\
+  \ переменнты - точки, по которым дальше получаются наблюдения;\n    3. observations\
+  \ - наблюдения, полученные по неизвестному закону f(x). Наблюдения могут содержать\
+  \ шум;\n    4. гипотеза 0 - H0 и закон, которому предположительно соответствуют\
+  \ observations;\n    5. гипотеза 1 - H1 и закон, которому предположительно соответствуют\
+  \ observations;\n    6. BIC - метрика силы поддержки гипотезы, вычисляющаяся по\
+  \ следующей формуле n * np.log(sse / n) + p * np.log(n);\n    7. SSE - метрика отклонения\
+  \ данных, полученных по гипотетическому закону от наблюдений, вычисляющаяся по следующей\
+  \ формуле sum^{n}_{i = 1}(observation_{i} - predicted_{i})^{2};\n    8. Delta BIC\
+  \ = BIC_H0 - BIC_H1 - метрика, показывающая какуб гипотезы данные поддерживают больше,\
+  \ если Delta BIC > 0, то данные поддерживают H1 больше, чем H0;\n    9. log_likelihood\
+  \ = (-n / 2.0) * log(2.0 * pi * sigma^{2}) - (SSE / (2.0 * sigma^{2})) - метрика,\
+  \ показывающая правдоподобность гипотезы данным;\n    10. log_likelihood_ratio =\
+  \ log_likelihood_h1 - log_likelihood_h0 - отношение правдоподобий гипотез, если\
+  \ > 1.0, то H1 правдоподобнее H0;\n\nТы анализируешь результаты эксперимента.\n\n\
+  Есть:\n    1. Prior - предполагаемая верная гипотеза;\n    2. полученные наблюдения:\
+  \ xs и f(xs) - observations, соответствующие какому-то неизвестному закону;\n  \
+  \  3. гипотеза 1 - H0 и закон, который ей соответствует;\n    4. гипотеза 2 - H1\
+  \ и закон, который ей соответствует;\n    5. метрики SSE, BIC и log_likelihood гипотезы\
+  \ H0;\n    6. метрики SSE, BIC и log_likelihood гипотезы H1;\n    7. Delta BIC;\n\
+  \    8. log_likelihood_ratio.\n\nТы должен понять по представленным данным, гипотезам\
+  \ и метрикам, какая гипотеза наилучшим образом описывает данные. Другими словами\
+  \ какой закон верен.\n\nВ качестве ответа всегда выводи ТОЛЬКО \"H0\", если ты считаешь,\
+  \ что она верна и ТОЛЬКО \"H1\", если думаешь, что верна она."
+prior_prompts:
+  neutral: Предположения о верности гипотез отсутствуют.
+  wrong: Предположительно верной гипотезой является H0.

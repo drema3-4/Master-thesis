@@ -1,0 +1,19 @@
+{
+  "run_id": "ex1_20260924T163028Z_b35dd7ab",
+  "total_planned": 2400,
+  "successful": 2400,
+  "failed": 0,
+  "invalid_responses": 0,
+  "conditions": {
+    "neutral": {
+      "n": 1200,
+      "selected_h1": 500,
+      "p_h1": 0.4166666666666667
+    },
+    "wrong": {
+      "n": 1200,
+      "selected_h1": 100,
+      "p_h1": 0.08333333333333333
+    }
+  }
+}

@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 
 from master_thesis.schemas.ex1.schemas import (
+    DatasetItem,
     Ex1Config,
     ExperimentRunItemResult
 )
@@ -45,7 +46,10 @@ def experiment(
             .read_text(encoding="utf-8")
         )
 
-    dataset = load_dataset(experiment_config.dataset_path)
+    dataset = load_dataset(
+        path=experiment_config.dataset_path,
+        schema_type=DatasetItem
+    )
 
     trial_index = 1
     successful_trials = 0
@@ -73,8 +77,9 @@ def experiment(
                                 delta_bic=item.delta_bic,
                                 log_likelihood_h0=item.log_likelihood_h0,
                                 log_likelihood_h1=item.log_likelihood_h1,
-                                log_likelihood_ratio=item.log_likelihood_ratio,
-                                monte_carlo=item.monte_carlo
+                                likelihood_ratio=item.likelihood_ratio,
+                                target_evidence_strength=item.target_evidence_strength,
+                                calibrated_evidence_strength=item.calibrated_evidence_strength
                             )
                         ),
                         config=experiment_config.generation_config
@@ -100,8 +105,9 @@ def experiment(
                         delta_bic=item.bic_h0-item.bic_h1,
                         log_likelihood_h0=item.log_likelihood_h0,
                         log_likelihood_h1=item.log_likelihood_h1,
-                        log_likelihood_ratio=item.log_likelihood_ratio,
-                        monte_carlo=item.monte_carlo,
+                        likelihood_ratio=item.likelihood_ratio,
+                        target_evidence_strength=item.target_evidence_strength,
+                        calibrated_evidence_strength=item.calibrated_evidence_strength,
                         prior=type_prior,
                         llm_output=response["content"],
                         answer=answer,
