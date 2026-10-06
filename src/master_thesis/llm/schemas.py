@@ -37,6 +37,6 @@ class Trial(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    likelihood_ratio: float
+    log_likelihood_ratio: float
     target_evidence_strength: float
     calibrated_evidence_strength: float

@@ -74,9 +74,13 @@ class PreItem(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    likelihood_ratio: float
+    log_likelihood_ratio: float
 
 class DatasetItem(BaseModel):
+    dataset_id: str
+    regime_id: str
+    replicate_index: int
+    generation_seed: int
     target_evidence_strength: float
     xs: list[float]
     ground_truth: list[float]
@@ -92,7 +96,7 @@ class DatasetItem(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    likelihood_ratio: float
+    log_likelihood_ratio: float
     calibrated_evidence_strength: float
     s: float
     r: float
@@ -102,6 +106,10 @@ class DatasetItem(BaseModel):
 class ExperimentRunItemResult(BaseModel):
     run_id: str
     trial_index: int
+    dataset_id: str
+    regime_id: str
+    replicate_index: int
+    generation_seed: int
     H0: str
     H1: str
     right_hypothesis: str
@@ -116,10 +124,14 @@ class ExperimentRunItemResult(BaseModel):
     delta_bic: float
     log_likelihood_h0: float
     log_likelihood_h1: float
-    likelihood_ratio: float
+    log_likelihood_ratio: float
     target_evidence_strength: float
     calibrated_evidence_strength: float
     prior: str
+    prior_h0: float
+    prior_h1: float
+    expected_p_h1: float
+    expected_choice: str
     llm_output: str
     answer: str
     is_right: bool
@@ -134,9 +146,12 @@ class Ex1Config(BaseModel):
     target_evidence_strength: list[float]
     choose_dataset_params_path: Path
     dataset_path: Path
+    dataset_seed: int
+    n_datasets_per_level: int
     llm_config: ModelConfig
     client_config: ClientConfig
     generation_config: GenerationConfig
     system_prompt_path: Path
     prior_prompts_paths: dict[str, Path]
+    prior_probabilities: dict[str, dict[str, float]]
     save_run_experiment_path: Path

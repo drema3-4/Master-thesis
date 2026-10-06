@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import math
 
 from master_thesis.schemas.ex1.schemas import (
     DatasetItem,
@@ -59,8 +60,21 @@ def experiment(
         failures_path.open("a", encoding="utf-8") as failures_file,
     ):
         for type_prior, prior_prompt in prior_prompts.items():
+            prior_h0 = experiment_config.prior_probabilities[type_prior]["H0"]
+            prior_h1 = experiment_config.prior_probabilities[type_prior]["H1"]
             for item in dataset:
                 try:
+                    log_posterior_odds_h1 = (
+                        math.log(prior_h1 / prior_h0)
+                        + item.delta_bic / 2.0
+                    )
+                    expected_p_h1 = 1.0 / (
+                        1.0 + math.exp(-log_posterior_odds_h1)
+                    )
+                    expected_choice = (
+                        "H1" if expected_p_h1 >= 0.5 else "H0"
+                    )
+
                     response = client.chat(
                         messages=build_trial(
                             Trial(
@@ -77,7 +91,7 @@ def experiment(
                                 delta_bic=item.delta_bic,
                                 log_likelihood_h0=item.log_likelihood_h0,
                                 log_likelihood_h1=item.log_likelihood_h1,
-                                likelihood_ratio=item.likelihood_ratio,
+                                log_likelihood_ratio=item.log_likelihood_ratio,
                                 target_evidence_strength=item.target_evidence_strength,
                                 calibrated_evidence_strength=item.calibrated_evidence_strength
                             )
@@ -91,6 +105,10 @@ def experiment(
                     result = ExperimentRunItemResult(
                         run_id=run_id,
                         trial_index=trial_index,
+                        dataset_id=item.dataset_id,
+                        regime_id=item.regime_id,
+                        replicate_index=item.replicate_index,
+                        generation_seed=item.generation_seed,
                         H0=H0,
                         H1=H1,
                         right_hypothesis=H1,
@@ -105,10 +123,14 @@ def experiment(
                         delta_bic=item.bic_h0-item.bic_h1,
                         log_likelihood_h0=item.log_likelihood_h0,
                         log_likelihood_h1=item.log_likelihood_h1,
-                        likelihood_ratio=item.likelihood_ratio,
+                        log_likelihood_ratio=item.log_likelihood_ratio,
                         target_evidence_strength=item.target_evidence_strength,
                         calibrated_evidence_strength=item.calibrated_evidence_strength,
                         prior=type_prior,
+                        prior_h0=prior_h0,
+                        prior_h1=prior_h1,
+                        expected_p_h1=expected_p_h1,
+                        expected_choice=expected_choice,
                         llm_output=response["content"],
                         answer=answer,
                         is_right=is_right_answer

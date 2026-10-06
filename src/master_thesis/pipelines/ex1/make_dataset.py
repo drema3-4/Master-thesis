@@ -30,7 +30,9 @@ def make_dataset(
     )
 
     dataset = gen_dataset(
-        choose_dataset_params_path=experiment_config.choose_dataset_params_path
+        choose_dataset_params_path=experiment_config.choose_dataset_params_path,
+        dataset_seed=experiment_config.dataset_seed,
+        n_datasets_per_level=experiment_config.n_datasets_per_level
     )
     save_dataset(
         datataset=dataset,

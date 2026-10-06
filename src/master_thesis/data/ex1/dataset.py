@@ -92,7 +92,7 @@ def pre_item(
         predicteds=h1_predicted,
         sigma=schema.sigma
     )
-    likelihood_ratio = log_likelihood_h1 - log_likelihood_h0
+    log_likelihood_ratio = log_likelihood_h1 - log_likelihood_h0
 
     return PreItem(
         xs=xs,
@@ -109,7 +109,7 @@ def pre_item(
         delta_bic=delta_bic,
         log_likelihood_h0=log_likelihood_h0,
         log_likelihood_h1=log_likelihood_h1,
-        likelihood_ratio=likelihood_ratio
+        log_likelihood_ratio=log_likelihood_ratio
     )
 
 def calibration_dataset_parameters_by_monte_carlo(
@@ -205,7 +205,9 @@ def choose_dataset_params(
     return choose_dataset_params
 
 def gen_dataset(
-    choose_dataset_params_path: Path
+    choose_dataset_params_path: Path,
+    dataset_seed: int,
+    n_datasets_per_level: int
 ) ->  list[DatasetItem]:
     choose_dataset_params = load_dataset(
         path=choose_dataset_params_path,
@@ -213,14 +215,20 @@ def gen_dataset(
     )
 
     dataset = []
-    for item in choose_dataset_params:
+    for level_index, item in enumerate(choose_dataset_params):
         x_max = item.X
         x_min = -item.X
         alpha = abs((item.r * item.k * item.X) / (item.X**3))
         sigma = item.s * item.k * item.X
 
-        for _ in range(100):
-            rng = random.Random(item.seed)
+        regime_id = f"regime_{level_index + 1:02d}"
+        for replicate_index in range(n_datasets_per_level):
+            generation_seed = (
+                dataset_seed
+                + level_index * 100000
+                + replicate_index
+            )
+            rng = random.Random(generation_seed)
 
             pre_item_ = pre_item(
                 schema=ObservationsGeneratorParams(
@@ -237,6 +245,13 @@ def gen_dataset(
 
             dataset.append(
                 DatasetItem(
+                    dataset_id=(
+                        f"dataset_{level_index + 1:02d}_"
+                        f"{replicate_index + 1:03d}"
+                    ),
+                    regime_id=regime_id,
+                    replicate_index=replicate_index + 1,
+                    generation_seed=generation_seed,
                     target_evidence_strength=item.target_evidence_strength,
                     **pre_item_.model_dump(),
                     calibrated_evidence_strength=item.calibrated_evidence_strength,      

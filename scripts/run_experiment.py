@@ -61,7 +61,7 @@ def run_experiment(
     started_time = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     
     run_id = create_run_id(
-        experiment_id="ex1",
+        experiment_id=experiment_config.experiment_id,
         timestamp=started_time
     )
     run_dir = Path(
@@ -95,7 +95,8 @@ def run_experiment(
 
     make_run_metric_report(
         run_id=run_id,
-        run_dir=run_dir
+        run_dir=run_dir,
+        experiment_config=experiment_config
     )
 
 
