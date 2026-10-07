@@ -1,0 +1,138 @@
+experiment_id: ex1_qwen3_4b_awq_v4
+schema_version: v4
+H0: f(x) = k*x
+H1: f(x) = k*x + alpha*x^{3}
+dataset_calibration_params:
+  seed: 42
+  Xs:
+  - 1.0
+  - 2.0
+  - 4.0
+  - 6.0
+  - 8.0
+  - 10.0
+  n_observations: 50
+  k: 1.0
+  mu: 0.0
+  relative_unlinear_intensity:
+  - 0.05
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1.0
+  relative_noise_intensity:
+  - 0.01
+  - 0.05
+  - 0.1
+  - 0.15
+  - 0.2
+  - 0.25
+  - 0.3
+  - 0.35
+  - 0.4
+calibration_dataset_path: data\generated\ex1_v4\calibration_dataset.jsonl
+target_evidence_strength:
+- 0.5
+- 0.55
+- 0.6
+- 0.65
+- 0.7
+- 0.75
+- 0.8
+- 0.85
+- 0.9
+- 0.95
+- 0.99
+- 1.0
+choose_dataset_params_path: data\generated\ex1_v4\choose_dataset_params.jsonl
+dataset_path: data\generated\ex1_v4\dataset.jsonl
+dataset_seed: 1042
+n_datasets_per_level: 50
+true_hypotheses:
+- H0
+- H1
+hypothesis_orders:
+- H0_H1
+- H1_H0
+llm_config:
+  repo_id: Qwen/Qwen3-4B-AWQ
+  revision: 74d4bd2bd4bff9cafc9345221320bffb08b406a3
+  local_dir: models\Qwen3-4B-AWQ
+  served_name: qwen3-4b-awq
+  runtime_image: vllm/vllm-openai:v0.29.0-cu129
+client_config:
+  base_url: http://localhost:8000/v1
+  api_key: local
+  model: qwen3-4b-awq
+generation_config:
+  temperature: 0.0
+  top_p: 0.8
+  top_k: 20
+  max_tokens: 512
+  seed: 42
+  enable_thinking: false
+system_prompt_path: prompts\ex1\system.txt
+prior_prompts_paths:
+  neutral: prompts\ex1\neutral.txt
+  wrong: prompts\ex1\wrong.txt
+prior_probabilities:
+  neutral:
+    H0:
+      H0: 0.5
+      H1: 0.5
+    H1:
+      H0: 0.5
+      H1: 0.5
+  wrong:
+    H0:
+      H0: 0.1
+      H1: 0.9
+    H1:
+      H0: 0.9
+      H1: 0.1
+save_run_experiment_path: outputs\runs\ex1_v4
+system_prompt: "Словарь терминов и обозначений:\n    1. Prior - исходные вероятности\
+  \ верности гипотез до получения новых данных;\n    2. xs - независимые переменные\
+  \ - точки, по которым дальше получаются наблюдения;\n    3. observations - наблюдения,\
+  \ полученные по неизвестному закону f(x). Наблюдения могут содержать шум;\n    4.\
+  \ конкурирующие гипотезы обозначены метками в пользовательском сообщении; порядок\
+  \ их предъявления не несёт информации о верности;\n    5. BIC - метрика сравнения\
+  \ гипотез, которая учитывает качество описания данных и штраф за сложность, вычисляющаяся\
+  \ по формуле n * np.log(sse / n) + p * np.log(n). Меньшее значение BIC соответствует\
+  \ более поддерживаемой гипотезе;\n    6. SSE - метрика отклонения данных, полученных\
+  \ по гипотетическому закону от наблюдений, вычисляющаяся по формуле sum^{n}_{i =\
+  \ 1}(observation_{i} - predicted_{i})^{2}. SSE оценивает качество подгонки, но не\
+  \ учитывает сложность гипотезы;\n    7. Delta BIC = BIC_H0 - BIC_H1 - основная метрика\
+  \ доказательной силы данных в этом эксперименте. Если Delta BIC > 0, данные поддерживают\
+  \ H1, если Delta BIC < 0, данные поддерживают H0;\n    8. log_likelihood = (-n /\
+  \ 2.0) * log(2.0 * pi * sigma^{2}) - (SSE / (2.0 * sigma^{2})) - метрика качества\
+  \ подгонки гипотезы к данным, которая не учитывает штраф за сложность;\n    9. log_likelihood_ratio\
+  \ = log_likelihood_h1 - log_likelihood_h0 - логарифм отношения правдоподобий без\
+  \ штрафа за сложность. Положительное значение log_likelihood_ratio само по себе\
+  \ не является достаточным основанием для выбора H1;\n\nТы анализируешь результаты\
+  \ эксперимента.\n\nЕсть:\n    1. Prior - исходные вероятности верности H0 и H1 до\
+  \ получения данных;\n    2. полученные наблюдения: xs и f(xs) - observations, соответствующие\
+  \ какому-то неизвестному закону;\n    3. две конкурирующие гипотезы и соответствующие\
+  \ им законы в контрбалансированном порядке;\n    4. метрики SSE, BIC и log_likelihood\
+  \ для каждой гипотезы в том же порядке;\n    5. Delta BIC;\n    6. log_likelihood_ratio.\n\
+  \nГипотеза H0 вложена в H1: при alpha = 0 закон H1 совпадает с H0. Параметр alpha\
+  \ подбирается по тем же наблюдениям, поэтому H1 может иметь меньшую SSE и больший\
+  \ log_likelihood даже тогда, когда верна H0. Не выбирай H1 только из-за меньшей\
+  \ SSE, большего log_likelihood или положительного log_likelihood_ratio.\n\nПри выборе\
+  \ гипотезы учитывай Prior и Delta BIC. Delta BIC учитывает штраф за дополнительный\
+  \ параметр H1 и является основным показателем поддержки гипотезы данными. Порядок\
+  \ предъявления H0 и H1 не несёт информации об их верности.\n\nВ качестве ответа\
+  \ всегда выводи ТОЛЬКО метку выбранной гипотезы без дополнительных слов и пояснений.\n"
+prior_prompts:
+  neutral: 'До получения данных: P(H0) = {prior_h0:.2f}, P(H1) = {prior_h1:.2f}.
+
+    '
+  wrong: 'До получения данных: P(H0) = {prior_h0:.2f}, P(H1) = {prior_h1:.2f}.
+
+    '

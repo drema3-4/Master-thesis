@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pathlib import Path
+from typing import Literal
 
 from master_thesis.llm.schemas import (
     ModelConfig,
@@ -16,6 +17,7 @@ class ObservationsGeneratorParams(BaseModel):
     alpha: float
     mu: float
     sigma: float
+    true_hypothesis: Literal["H0", "H1"] = "H1"
 
 class ObservationsGeneratorOutput(BaseModel):
     xs: list[float]
@@ -47,6 +49,8 @@ class DatasetCalibrationItem(BaseModel):
     r: float
     s: float
     monte_carlo: float
+    monte_carlo_h0: float | None = None
+    monte_carlo_h1: float | None = None
 
 class ChooseDatasetParamsItem(BaseModel):
     target_evidence_strength: float
@@ -58,6 +62,8 @@ class ChooseDatasetParamsItem(BaseModel):
     r: float
     s: float
     calibrated_evidence_strength: float
+    calibrated_evidence_strength_h0: float | None = None
+    calibrated_evidence_strength_h1: float | None = None
 
 class PreItem(BaseModel):
     xs: list[float]
@@ -81,7 +87,9 @@ class DatasetItem(BaseModel):
     regime_id: str
     replicate_index: int
     generation_seed: int
-    target_evidence_strength: float
+    right_hypothesis: Literal["H0", "H1"] = "H1"
+    evidence_calibrated_for: Literal["H1"] = "H1"
+    target_evidence_strength: float | None
     xs: list[float]
     ground_truth: list[float]
     observations: list[float]
@@ -97,7 +105,7 @@ class DatasetItem(BaseModel):
     log_likelihood_h0: float
     log_likelihood_h1: float
     log_likelihood_ratio: float
-    calibrated_evidence_strength: float
+    calibrated_evidence_strength: float | None
     s: float
     r: float
     k: float
@@ -112,7 +120,8 @@ class ExperimentRunItemResult(BaseModel):
     generation_seed: int
     H0: str
     H1: str
-    right_hypothesis: str
+    right_hypothesis: Literal["H0", "H1"]
+    hypothesis_order: Literal["H0_H1", "H1_H0"]
     s: float
     r: float
     k: float
@@ -125,8 +134,8 @@ class ExperimentRunItemResult(BaseModel):
     log_likelihood_h0: float
     log_likelihood_h1: float
     log_likelihood_ratio: float
-    target_evidence_strength: float
-    calibrated_evidence_strength: float
+    target_evidence_strength: float | None
+    calibrated_evidence_strength: float | None
     prior: str
     prior_h0: float
     prior_h1: float
@@ -148,10 +157,21 @@ class Ex1Config(BaseModel):
     dataset_path: Path
     dataset_seed: int
     n_datasets_per_level: int
+    true_hypotheses: list[Literal["H0", "H1"]] = Field(
+        default_factory=lambda: ["H1"],
+        min_length=1
+    )
+    hypothesis_orders: list[Literal["H0_H1", "H1_H0"]] = Field(
+        default_factory=lambda: ["H0_H1"],
+        min_length=1
+    )
     llm_config: ModelConfig
     client_config: ClientConfig
     generation_config: GenerationConfig
     system_prompt_path: Path
     prior_prompts_paths: dict[str, Path]
-    prior_probabilities: dict[str, dict[str, float]]
+    prior_probabilities: dict[
+        str,
+        dict[str, float] | dict[str, dict[str, float]]
+    ]
     save_run_experiment_path: Path

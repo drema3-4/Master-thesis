@@ -32,7 +32,8 @@ def make_dataset(
     dataset = gen_dataset(
         choose_dataset_params_path=experiment_config.choose_dataset_params_path,
         dataset_seed=experiment_config.dataset_seed,
-        n_datasets_per_level=experiment_config.n_datasets_per_level
+        n_datasets_per_level=experiment_config.n_datasets_per_level,
+        true_hypotheses=experiment_config.true_hypotheses
     )
     save_dataset(
         datataset=dataset,

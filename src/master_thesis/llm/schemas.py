@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from pathlib import Path
+from typing import Literal
 
 
 class ModelConfig(BaseModel):
@@ -30,6 +31,7 @@ class Trial(BaseModel):
     observations: list[float]
     H0: str
     H1: str
+    hypothesis_order: Literal["H0_H1", "H1_H0"]
     sse_h0: float
     sse_h1: float
     bic_h0: float
@@ -38,5 +40,5 @@ class Trial(BaseModel):
     log_likelihood_h0: float
     log_likelihood_h1: float
     log_likelihood_ratio: float
-    target_evidence_strength: float
-    calibrated_evidence_strength: float
+    target_evidence_strength: float | None
+    calibrated_evidence_strength: float | None

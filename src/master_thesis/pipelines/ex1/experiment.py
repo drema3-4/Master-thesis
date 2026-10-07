@@ -22,6 +22,22 @@ from master_thesis.utils.parse_hypothesis import (
 )
 
 
+def resolve_prior_probabilities(
+    experiment_config: Ex1Config,
+    prior_type: str,
+    right_hypothesis: str
+) -> tuple[float, float]:
+    prior_config = experiment_config.prior_probabilities[prior_type]
+
+    if isinstance(prior_config.get("H0"), dict):
+        prior_config = prior_config[right_hypothesis]
+
+    return (
+        float(prior_config["H0"]),
+        float(prior_config["H1"])
+    )
+
+
 def experiment(
     experiment_config: Ex1Config,
     run_id: str,
@@ -59,11 +75,23 @@ def experiment(
         responses_path.open("a", encoding="utf-8") as responses_file,
         failures_path.open("a", encoding="utf-8") as failures_file,
     ):
-        for type_prior, prior_prompt in prior_prompts.items():
-            prior_h0 = experiment_config.prior_probabilities[type_prior]["H0"]
-            prior_h1 = experiment_config.prior_probabilities[type_prior]["H1"]
+        for type_prior, prior_prompt_template in prior_prompts.items():
             for item in dataset:
+                hypothesis_order = experiment_config.hypothesis_orders[
+                    (item.replicate_index - 1)
+                    % len(experiment_config.hypothesis_orders)
+                ]
                 try:
+                    prior_h0, prior_h1 = resolve_prior_probabilities(
+                        experiment_config=experiment_config,
+                        prior_type=type_prior,
+                        right_hypothesis=item.right_hypothesis
+                    )
+                    prior_prompt = prior_prompt_template.format(
+                        prior_h0=prior_h0,
+                        prior_h1=prior_h1
+                    )
+
                     log_posterior_odds_h1 = (
                         math.log(prior_h1 / prior_h0)
                         + item.delta_bic / 2.0
@@ -84,6 +112,7 @@ def experiment(
                                 observations=item.observations,
                                 H0=H0,
                                 H1=H1,
+                                hypothesis_order=hypothesis_order,
                                 sse_h0=item.sse_h0,
                                 sse_h1=item.sse_h1,
                                 bic_h0=item.bic_h0,
@@ -100,7 +129,9 @@ def experiment(
                     )
 
                     answer = parse_hypothesis(response["content"])
-                    is_right_answer = True if "H1" in answer else False
+                    is_right_answer = (
+                        answer == item.right_hypothesis
+                    )
 
                     result = ExperimentRunItemResult(
                         run_id=run_id,
@@ -111,7 +142,8 @@ def experiment(
                         generation_seed=item.generation_seed,
                         H0=H0,
                         H1=H1,
-                        right_hypothesis=H1,
+                        right_hypothesis=item.right_hypothesis,
+                        hypothesis_order=hypothesis_order,
                         s=item.s,
                         r=item.r,
                         k=item.k,
@@ -146,6 +178,10 @@ def experiment(
                     failure = {
                         "run_id": run_id,
                         "trial_index": trial_index,
+                        "dataset_id": item.dataset_id,
+                        "prior": type_prior,
+                        "right_hypothesis": item.right_hypothesis,
+                        "hypothesis_order": hypothesis_order,
                         "error_type": type(error).__name__,
                         "error_message": str(error),
                     }

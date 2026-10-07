@@ -1,0 +1,21 @@
+{
+  "experiment_id": "ex1_qwen3_4b_awq_v4",
+  "schema_version": "v4",
+  "run_id": "ex1_qwen3_4b_awq_v4_20261007T121225Z_1c1239e7",
+  "started_at": "20261007T121225Z",
+  "finished_at": "20261007T125102Z",
+  "git_commit": "f7ad872db66e73011d91b602bff1ce342f03453c",
+  "model": {
+    "repo_id": "Qwen/Qwen3-4B-AWQ",
+    "revision": "74d4bd2bd4bff9cafc9345221320bffb08b406a3",
+    "local_dir": "models\\Qwen3-4B-AWQ",
+    "served_name": "qwen3-4b-awq",
+    "runtime_image": "vllm/vllm-openai:v0.29.0-cu129"
+  },
+  "calibration_dataset_path": "data\\generated\\ex1_v4\\calibration_dataset.jsonl",
+  "choose_dataset_params_path": "data\\generated\\ex1_v4\\choose_dataset_params.jsonl",
+  "dataset_path": "data\\generated\\ex1_v4\\dataset.jsonl",
+  "planned_trials": 2400,
+  "successful_trials": 2400,
+  "failed_trials": 0
+}

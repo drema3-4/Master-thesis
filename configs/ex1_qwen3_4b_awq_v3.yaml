@@ -1,0 +1,112 @@
+experiment_id: "ex1_qwen3_4b_awq_v3"
+
+schema_version: "v3"
+
+H0: "f(x) = k*x"
+H1: "f(x) = k*x + alpha*x^{3}"
+
+dataset_calibration_params:
+  seed: 42
+  Xs:
+    - 1.0
+    - 2.0
+    - 4.0
+    - 6.0
+    - 8.0
+    - 10.0
+  n_observations: 50
+  k: 1.0
+  mu: 0.0
+  relative_unlinear_intensity:
+    - 0.05
+    - 0.10
+    - 0.20
+    - 0.30
+    - 0.40
+    - 0.50
+    - 0.60
+    - 0.70
+    - 0.80
+    - 0.90
+    - 1.00
+  relative_noise_intensity:
+    - 0.01
+    - 0.05
+    - 0.10
+    - 0.15
+    - 0.20
+    - 0.25
+    - 0.30
+    - 0.35
+    - 0.40
+
+calibration_dataset_path: "data/generated/ex1_v3/calibration_dataset.jsonl"
+
+target_evidence_strength:
+  - 0.50
+  - 0.55
+  - 0.60
+  - 0.65
+  - 0.70
+  - 0.75
+  - 0.80
+  - 0.85
+  - 0.90
+  - 0.95
+  - 0.99
+  - 1.00
+
+choose_dataset_params_path: "data/generated/ex1_v3/choose_dataset_params.jsonl"
+
+dataset_path: "data/generated/ex1_v3/dataset.jsonl"
+dataset_seed: 1042
+n_datasets_per_level: 50
+true_hypotheses:
+  - "H0"
+  - "H1"
+hypothesis_orders:
+  - "H0_H1"
+  - "H1_H0"
+
+llm_config:
+  repo_id: "Qwen/Qwen3-4B-AWQ"
+  revision: "74d4bd2bd4bff9cafc9345221320bffb08b406a3"
+  local_dir: "models/Qwen3-4B-AWQ"
+  served_name: "qwen3-4b-awq"
+  runtime_image: "vllm/vllm-openai:v0.29.0-cu129"
+
+client_config:
+  base_url: "http://localhost:8000/v1"
+  api_key: "local"
+  model: "qwen3-4b-awq"
+
+generation_config:
+  temperature: 0.0
+  top_p: 0.8
+  top_k: 20
+  max_tokens: 512
+  seed: 42
+  enable_thinking: False
+
+system_prompt_path: "prompts/ex1/system.txt"
+prior_prompts_paths:
+  neutral: "prompts/ex1/neutral.txt"
+  wrong: "prompts/ex1/wrong.txt"
+prior_probabilities:
+  neutral:
+    H0:
+      H0: 0.50
+      H1: 0.50
+    H1:
+      H0: 0.50
+      H1: 0.50
+  wrong:
+    H0:
+      H0: 0.10
+      H1: 0.90
+    H1:
+      H0: 0.90
+      H1: 0.10
+
+save_run_experiment_path: "outputs/runs/ex1_v3"
+

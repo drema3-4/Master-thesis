@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Literal
 
 
 def sse(
@@ -42,13 +43,19 @@ def log_likelihood(
     )
 
 def monte_carlo(
-    delta_bics: list[float]
+    delta_bics: list[float],
+    right_hypothesis: Literal["H0", "H1"] = "H1"
 ) -> float:
     n = len(delta_bics)
 
     metric = 0.0
     for delta_bic in delta_bics:
-        if delta_bic > 0:
+        supports_right_hypothesis = (
+            delta_bic > 0
+            if right_hypothesis == "H1"
+            else delta_bic < 0
+        )
+        if supports_right_hypothesis:
             metric += 1.0
 
     return metric / n
